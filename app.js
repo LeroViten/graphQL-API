@@ -2,10 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-const { PORT } = process.env;
-const events = [];
+const { PORT, MONGO_USER, PASSWORD, DB_NAME } = process.env;
+const Event = require('./models/event');
 
 const app = express();
 
@@ -45,17 +46,36 @@ app.use(
       `),
     rootValue: {
       events: () => {
-        return events;
+        return Event.find()
+          .then((events) => {
+            return events.map((event) => {
+              return { ...event._doc, _id: event.id };
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            throw error;
+          });
       },
       createEvent: (args) => {
-        const event = {
-          _id: Math.random().toString(),
+        const event = new Event({
           title: args.eventInput.title,
           description: args.eventInput.description,
           price: +args.eventInput.price,
-          date: args.eventInput.date,
-        };
-        events.push(event);
+          date: new Date(args.eventInput.date),
+        });
+
+        return event
+          .save()
+          .then((result) => {
+            console.log(result);
+            return { ...result._doc, _id: result._doc._id.toString() };
+          })
+          .catch((error) => {
+            console.log(error);
+            throw error;
+          });
+
         return event;
       },
     },
@@ -63,6 +83,13 @@ app.use(
   })
 );
 
-app.listen(PORT, console.log(`Server is running on port ${PORT}`));
-
-app.get('/');
+mongoose
+  .connect(
+    `mongodb+srv://${MONGO_USER}:${PASSWORD}@cluster0.9x8mv.mongodb.net/${DB_NAME}?retryWrites=true&w=majority`
+  )
+  .then(() => {
+    app.listen(PORT, console.log(`Server is running on port ${PORT}`));
+  })
+  .catch((error) => {
+    console.log(error.message);
+  });
