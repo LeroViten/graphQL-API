@@ -13,7 +13,7 @@ module.exports = buildSchema(`
             _id: ID!
             title: String!
             description: String!
-            price: Float!
+            price: String!
             date: String!
             creator: User!
         }
@@ -34,7 +34,7 @@ module.exports = buildSchema(`
         input EventInput {
             title: String!
             description: String!
-            price: Float!
+            price: String!
             date: String!
         }
 
