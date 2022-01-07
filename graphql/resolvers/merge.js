@@ -36,12 +36,11 @@ const user = async (userId) => {
 };
 
 const transformEvent = (event) => {
-  console.log(event._doc);
   return {
     ...event._doc,
     _id: event.id,
     date: dateToString(event._doc.date),
-    creator: user.bind(this, event.creator),
+    creator: user.bind(this, event._doc.creator),
   };
 };
 
